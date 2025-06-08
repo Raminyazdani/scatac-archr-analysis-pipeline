@@ -1,0 +1,5 @@
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(init): Initial repository setup with R project structure
+
+This commit establishes the foundation for the single-cell ATAC-seq analysis pipeline project. Created the basic R project structure with version control setup and initial placeholder documentation. The .gitignore file is configured to exclude R-specific artifacts, generated data directories, and analysis outputs to keep the repository clean. The README provides an initial project overview describing the pipeline's purpose, and renv.lock is initialized to manage reproducible R package dependencies.
+
+This setup ensures a professional project foundation with reproducibility considerations from the start, following R ecosystem best practices for project organization and dependency management.
