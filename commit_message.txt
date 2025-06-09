@@ -1,5 +1,5 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(init): Initial repository setup with R project structure
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(deps): Add core library dependencies for scATAC-seq analysis
 
-This commit establishes the foundation for the single-cell ATAC-seq analysis pipeline project. Created the basic R project structure with version control setup and initial placeholder documentation. The .gitignore file is configured to exclude R-specific artifacts, generated data directories, and analysis outputs to keep the repository clean. The README provides an initial project overview describing the pipeline's purpose, and renv.lock is initialized to manage reproducible R package dependencies.
+Added the analysis_pipeline.R script with core library imports required for single-cell ATAC-seq data analysis. This includes ArchR (the primary framework for scATAC-seq analysis), ggplot2 and patchwork for publication-quality visualizations, and tidyverse for data manipulation. The renv.lock file is updated to include all dependencies with locked versions, ensuring full reproducibility across different environments.
 
-This setup ensures a professional project foundation with reproducibility considerations from the start, following R ecosystem best practices for project organization and dependency management.
+These libraries form the foundation of the analysis pipeline and must be loaded before any analytical work can begin. The commented-out installation code at the top provides guidance for setting up the environment from scratch, including the ArchR GitHub installation which requires the dev branch for the latest features.
