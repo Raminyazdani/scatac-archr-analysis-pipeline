@@ -1,5 +1,5 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(deps): Add core library dependencies for scATAC-seq analysis
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(config): Set up basic configuration parameters
 
-Added the analysis_pipeline.R script with core library imports required for single-cell ATAC-seq data analysis. This includes ArchR (the primary framework for scATAC-seq analysis), ggplot2 and patchwork for publication-quality visualizations, and tidyverse for data manipulation. The renv.lock file is updated to include all dependencies with locked versions, ensuring full reproducibility across different environments.
+Added initial configuration section to the analysis pipeline with random seeding and thread count detection. The set.seed(1) ensures reproducibility of stochastic algorithms used throughout the pipeline (LSI, UMAP, clustering). Thread count is automatically detected using parallel::detectCores(), leaving 2 cores free for system processes to maintain responsiveness during long-running analyses.
 
-These libraries form the foundation of the analysis pipeline and must be loaded before any analytical work can begin. The commented-out installation code at the top provides guidance for setting up the environment from scratch, including the ArchR GitHub installation which requires the dev branch for the latest features.
+This is the first part of the configuration setup. File paths and directory structure will be added in the next commit to keep changes focused and reviewable.
