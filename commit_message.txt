@@ -1,5 +1,7 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(config): Set up basic configuration parameters
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(config): Complete configuration with file paths and directory validation
 
-Added initial configuration section to the analysis pipeline with random seeding and thread count detection. The set.seed(1) ensures reproducibility of stochastic algorithms used throughout the pipeline (LSI, UMAP, clustering). Thread count is automatically detected using parallel::detectCores(), leaving 2 cores free for system processes to maintain responsiveness during long-running analyses.
+Completed the configuration section by adding all file path definitions and directory creation logic. Uses portable path construction with getwd() and file.path() to ensure cross-platform compatibility (Windows, macOS, Linux). The configuration expects input data files: scbi_p2.zip (scATAC-seq fragments) and new_pbmc.rds (scRNA-seq reference for integration), and sets up data/ and results/ directories for intermediate and final outputs.
 
-This is the first part of the configuration setup. File paths and directory structure will be added in the next commit to keep changes focused and reviewable.
+Added directory existence checks with automatic creation and working directory validation to prevent path-related errors during execution. The configuration is now complete and the pipeline is ready for implementation of analysis phases.
+
+Verified: All paths use relative references, no hard-coded absolute paths that would break on other systems.
