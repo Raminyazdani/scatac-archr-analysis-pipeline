@@ -1,7 +1,7 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(config): Complete configuration with file paths and directory validation
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(preprocess): Begin Phase 1 - preprocessing and QC setup
 
-Completed the configuration section by adding all file path definitions and directory creation logic. Uses portable path construction with getwd() and file.path() to ensure cross-platform compatibility (Windows, macOS, Linux). The configuration expects input data files: scbi_p2.zip (scATAC-seq fragments) and new_pbmc.rds (scRNA-seq reference for integration), and sets up data/ and results/ directories for intermediate and final outputs.
+Started implementing Phase 1 of the analysis pipeline: preprocessing and quality control. This includes data extraction from the ZIP archive, genome annotation setup (hg38), and the beginning of Arrow file creation from fragment files. Arrow files are ArchR's optimized format for efficient single-cell data storage and access.
 
-Added directory existence checks with automatic creation and working directory validation to prevent path-related errors during execution. The configuration is now complete and the pipeline is ready for implementation of analysis phases.
+The code sets up genome annotation, extracts fragment files, and begins the addArchRGenome and createArrowFiles functions but is not yet complete. Quality control thresholds (TSS enrichment, fragment counts) and doublet detection will be added in the next commit to complete this phase.
 
-Verified: All paths use relative references, no hard-coded absolute paths that would break on other systems.
+Work in progress - this step represents the initial scaffolding for preprocessing before adding the full QC pipeline.
