@@ -1,7 +1,13 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(preprocess): Begin Phase 1 - preprocessing and QC setup
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(preprocess): Complete Phase 1 - preprocessing and quality control
 
-Started implementing Phase 1 of the analysis pipeline: preprocessing and quality control. This includes data extraction from the ZIP archive, genome annotation setup (hg38), and the beginning of Arrow file creation from fragment files. Arrow files are ArchR's optimized format for efficient single-cell data storage and access.
+Completed the full preprocessing and quality control pipeline. This critical phase processes raw scATAC-seq fragment files into quality-filtered Arrow files ready for downstream analysis. Key accomplishments:
 
-The code sets up genome annotation, extracts fragment files, and begins the addArchRGenome and createArrowFiles functions but is not yet complete. Quality control thresholds (TSS enrichment, fragment counts) and doublet detection will be added in the next commit to complete this phase.
+1. **Arrow File Creation**: Converts fragment files to ArchR's efficient Arrow format with automatic cell barcode handling and filtering based on TSS enrichment (>4) and fragment counts (>1000).
 
-Work in progress - this step represents the initial scaffolding for preprocessing before adding the full QC pipeline.
+2. **Doublet Detection**: Implements ArchR's doublet identification algorithm to remove technical artifacts where two cells are captured in the same droplet, which would confound downstream clustering.
+
+3. **Quality Visualizations**: Generates comprehensive QC plots including fragment size distributions (should show nucleosome banding pattern), TSS enrichment profiles, and scatter plots correlating TSS vs fragment count metrics.
+
+4. **ArchR Project Creation**: Initializes the ArchR project object with filtered high-quality cells, setting the foundation for all subsequent analyses.
+
+Verified: QC thresholds (TSS>8, fragments>1000 for final filtering) ensure only high-quality cells pass to downstream analysis, critical for reliable biological interpretation.

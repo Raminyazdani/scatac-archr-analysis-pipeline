@@ -148,3 +148,130 @@ original_proj <- addDoubletScores(
   input = original_proj,
   k = 10, 
   knnMethod = "UMAP", 
+  LSIMethod = 1
+)
+
+
+filteredProj <- filterDoublets(original_proj)
+proj <- filteredProj
+
+# 1.4 collect all samples into a joint data structure
+num_cells <- nCells(proj)
+median_TSS <- median(proj$TSSEnrichment)
+median_fragments <- median(proj$nFrags)
+TileMatrix_obj <-getMatrixFromProject(
+  ArchRProj = proj,
+  useMatrix = "TileMatrix",
+  binarize = TRUE
+)
+# 1.4.1
+num_cells
+# 1.4.2
+median_TSS
+# 1.4.3
+# since we didnt call peaks yet this is tilematrix dimension
+peak_dimensions <- dim(TileMatrix_obj)
+
+# 1.5 quality control
+
+cell_metadata <- getCellColData(proj)
+cell_counts <- table(cell_metadata$Sample)
+
+fragment_length_plot <- plotFragmentSizes(proj)
+
+TSSE_plot_dist <- plotTSSEnrichment(ArchRProj = proj, groupBy = "Sample")
+TSSE_plot_violin <- plotGroups(
+  ArchRProj = proj, 
+  groupBy = "Sample", 
+  colorBy = "cellColData", 
+  name = "TSSEnrichment",
+  plotAs = "violin",
+  alpha = 0.4,
+  addBoxPlot = TRUE
+)
+TSSE_plot_ridge <- plotGroups(
+  ArchRProj = proj, 
+  groupBy = "Sample", 
+  colorBy = "cellColData", 
+  name = "TSSEnrichment",
+  plotAs = "ridges"
+)
+
+
+create_fragments_tss_plot <- function(proj, sample_name) {
+  # Extract metadata for the specific sample
+  metadata <- getCellColData(proj) %>% 
+    as.data.frame() %>%
+    filter(Sample == sample_name)
+  
+  # Create plot
+  p <- ggplot(metadata, aes(x = nFrags, y = TSSEnrichment)) +
+    geom_point(alpha = 0.6, color = "blue") +
+    theme_minimal() +
+    labs(
+      title = paste("Fragments vs TSS Enrichment -", sample_name),
+      x = "Number of Fragments",
+      y = "TSS Enrichment"
+    ) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      axis.title = element_text(face = "bold")
+    ) +
+    geom_smooth(method = "loess", color = "red", se = TRUE)
+  
+  # Save plot
+  ggsave(
+    filename = paste0("./QualityControl/",sample_name, "/fragments_tss_plot.pdf"), 
+    plot = p, 
+    width = 8, 
+    height = 6
+  )
+  
+  return(p)
+}
+plot_DC1R3 <- create_fragments_tss_plot(proj, "dc1r3_r1")
+plot_DC2R2_R1 <- create_fragments_tss_plot(proj, "dc2r2_r1")
+plot_DC2R2_R2 <- create_fragments_tss_plot(proj, "dc2r2_r2")
+
+
+
+# 1.5.1
+cell_counts
+# 1.5.2
+fragment_length_plot
+# 1.5.3
+TSSE_plot_dist
+TSSE_plot_violin
+TSSE_plot_ridge
+# 1.5.4
+plot_DC1R3
+plot_DC2R2_R1
+plot_DC2R2_R2
+
+# Save fragment_length_plot
+ggsave("fragment_length_plot.png", plot = fragment_length_plot, width = 6, height = 4)
+
+# Save TSSE_plot_dist
+ggsave("TSSE_plot_dist.png", plot = TSSE_plot_dist, width = 6, height = 4)
+
+# Save TSSE_plot_violin
+ggsave("TSSE_plot_violin.png", plot = TSSE_plot_violin, width = 6, height = 4)
+
+# Save TSSE_plot_ridge
+ggsave("TSSE_plot_ridge.png", plot = TSSE_plot_ridge, width = 6, height = 4)
+
+# Save plot_DC1R3
+ggsave("plot_DC1R3.png", plot = plot_DC1R3, width = 6, height = 4)
+
+# Save plot_DC2R2_R1
+ggsave("plot_DC2R2_R1.png", plot = plot_DC2R2_R1, width = 6, height = 4)
+
+# Save plot_DC2R2_R2
+ggsave("plot_DC2R2_R2.png", plot = plot_DC2R2_R2, width = 6, height = 4)
+
+
+
+# 1.6 Filter the dataset
+
+# no need since the plots are ok
+
