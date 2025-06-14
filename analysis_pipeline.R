@@ -275,3 +275,23 @@ ggsave("plot_DC2R2_R2.png", plot = plot_DC2R2_R2, width = 6, height = 4)
 
 # no need since the plots are ok
 
+
+# Phase 2: Dimensionality Reduction
+# 2 Dimensionality Reduction
+
+# 2.1 Iterative LSI
+proj <- addIterativeLSI(
+  ArchRProj = proj,               # filtered ArchR project
+  useMatrix = "TileMatrix",       # Use TileMatrix for dimensionality reduction
+  name = "IterativeLSI",          # Name of the LSI analysis
+  iterations = 4,                 # Number of LSI iterations
+  clusterParams = list(           # Clustering parameters
+    resolution = c(0.2,0.5,0.8),        # Resolution for clustering
+    sampleCells = 10000,        # Number of cells to sample for clustering
+    n.start = 10                # Number of random starts for clustering
+  ), 
+  varFeatures = 25000,            # Number of variable features to use
+  dimsToUse = 1:30,                # Number of dimensions to use in downstream analysis
+  force = T
+)
+

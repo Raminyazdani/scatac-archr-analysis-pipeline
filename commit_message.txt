@@ -1,13 +1,9 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(preprocess): Complete Phase 1 - preprocessing and quality control
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(dimreduce): Implement Iterative LSI for dimensionality reduction
 
-Completed the full preprocessing and quality control pipeline. This critical phase processes raw scATAC-seq fragment files into quality-filtered Arrow files ready for downstream analysis. Key accomplishments:
+Implemented Iterative Latent Semantic Indexing (LSI), a specialized dimensionality reduction technique optimized for scATAC-seq data. LSI is preferred over PCA for sparse chromatin accessibility data because it better captures the binary nature (accessible vs inaccessible) of ATAC-seq measurements.
 
-1. **Arrow File Creation**: Converts fragment files to ArchR's efficient Arrow format with automatic cell barcode handling and filtering based on TSS enrichment (>4) and fragment counts (>1000).
+The implementation uses 4 iterations of LSI with 30 dimensions, which empirically balances computational efficiency with preservation of biological variation. Each iteration refines the feature selection and LSI projection, progressively improving the representation of cellular heterogeneity.
 
-2. **Doublet Detection**: Implements ArchR's doublet identification algorithm to remove technical artifacts where two cells are captured in the same droplet, which would confound downstream clustering.
+This dimensionality reduction is crucial for all downstream analyses - clustering, UMAP visualization, and cell type identification all depend on a quality LSI projection that captures true biological variation while removing technical noise.
 
-3. **Quality Visualizations**: Generates comprehensive QC plots including fragment size distributions (should show nucleosome banding pattern), TSS enrichment profiles, and scatter plots correlating TSS vs fragment count metrics.
-
-4. **ArchR Project Creation**: Initializes the ArchR project object with filtered high-quality cells, setting the foundation for all subsequent analyses.
-
-Verified: QC thresholds (TSS>8, fragments>1000 for final filtering) ensure only high-quality cells pass to downstream analysis, critical for reliable biological interpretation.
+Next step: Add UMAP embedding for 2D visualization of the LSI-reduced data space.
