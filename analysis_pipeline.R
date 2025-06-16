@@ -295,3 +295,54 @@ proj <- addIterativeLSI(
   force = T
 )
 
+# 2.2 UMAP with sample annotation and QC metrics
+proj <- addUMAP(
+  ArchRProj = proj,              #  ArchR project with filtered cells
+  reducedDims = "IterativeLSI",   # Use reduced dimensions from Iterative LSI
+  name = "UMAP",                  # Name the UMAP embedding
+  nNeighbors = 30,                # Number of nearest neighbors
+  minDist = 0.5,                  # Minimum distance between points
+  metric = "cosine",               # Metric for UMAP distance calculations
+  force = T
+)
+
+# Plot UMAP Colored by Sample Annotation
+plot_sample <- plotEmbedding(
+  ArchRProj = proj, 
+  colorBy = "cellColData", 
+  name = "Sample",                # Color by Sample
+  embedding = "UMAP"
+)
+
+# Plot UMAP Colored by TSS Enrichment
+plot_tss <- plotEmbedding(
+  ArchRProj = proj, 
+  colorBy = "cellColData", 
+  name = "TSSEnrichment",         # Color by TSS Enrichment
+  embedding = "UMAP"
+)
+
+# Plot UMAP Colored by Number of Fragments
+plot_fragments <- plotEmbedding(
+  ArchRProj = proj, 
+  colorBy = "cellColData", 
+  name = "nFrags",                # Color by Number of Fragments
+  embedding = "UMAP"
+)
+
+plot_sample      
+
+plot_tss              
+
+plot_fragments
+
+# Save plot_DC1R3
+ggsave("pre_batch_effect_umap_sample.png", plot = plot_sample, width = 6, height = 4)
+
+# Save plot_DC2R2_R1
+ggsave("pre_batch_effect_umap_tss.png", plot = plot_tss, width = 6, height = 4)
+
+# Save plot_DC2R2_R2
+ggsave("pre_batch_effect_umap_fragments.png", plot = plot_fragments, width = 6, height = 4)
+
+

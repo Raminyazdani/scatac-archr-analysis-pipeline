@@ -1,9 +1,13 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(dimreduce): Implement Iterative LSI for dimensionality reduction
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(viz): Add UMAP embedding and initial visualizations
 
-Implemented Iterative Latent Semantic Indexing (LSI), a specialized dimensionality reduction technique optimized for scATAC-seq data. LSI is preferred over PCA for sparse chromatin accessibility data because it better captures the binary nature (accessible vs inaccessible) of ATAC-seq measurements.
+Added UMAP (Uniform Manifold Approximation and Projection) embedding to project the high-dimensional LSI space into 2D for visualization. UMAP preserves both local and global structure of the data, making it ideal for identifying cell clusters and understanding relationships between cell types.
 
-The implementation uses 4 iterations of LSI with 30 dimensions, which empirically balances computational efficiency with preservation of biological variation. Each iteration refines the feature selection and LSI projection, progressively improving the representation of cellular heterogeneity.
+Generated multiple UMAP visualizations colored by different metadata:
+- Sample: Reveals batch effects and technical variation between samples
+- TSS Enrichment: Shows quality distribution across cells (high TSS = good quality)
+- Fragment Count: Indicates sequencing depth per cell
+- nFrags bins: Categorized view of fragment count distribution
 
-This dimensionality reduction is crucial for all downstream analyses - clustering, UMAP visualization, and cell type identification all depend on a quality LSI projection that captures true biological variation while removing technical noise.
+These initial visualizations revealed clear batch effects where cells cluster primarily by sample rather than by cell type, indicating the need for batch correction. This is a common issue in multi-sample scATAC-seq experiments and will be addressed with Harmony integration in the next phase.
 
-Next step: Add UMAP embedding for 2D visualization of the LSI-reduced data space.
+Next: Implement Harmony batch correction to remove sample-specific technical variation while preserving biological differences.
