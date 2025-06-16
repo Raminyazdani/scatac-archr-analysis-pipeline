@@ -1,13 +1,7 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(viz): Add UMAP embedding and initial visualizations
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(batch): Begin Harmony batch effect correction implementation
 
-Added UMAP (Uniform Manifold Approximation and Projection) embedding to project the high-dimensional LSI space into 2D for visualization. UMAP preserves both local and global structure of the data, making it ideal for identifying cell clusters and understanding relationships between cell types.
+Started implementing Harmony batch correction to remove sample-specific technical variation that was clearly visible in the UMAP colored by sample. Harmony is a fast and flexible algorithm that integrates multiple samples by identifying and removing batch-specific variation in the LSI embedding space while preserving biological differences between cell types.
 
-Generated multiple UMAP visualizations colored by different metadata:
-- Sample: Reveals batch effects and technical variation between samples
-- TSS Enrichment: Shows quality distribution across cells (high TSS = good quality)
-- Fragment Count: Indicates sequencing depth per cell
-- nFrags bins: Categorized view of fragment count distribution
+The implementation begins with addHarmony() function setup but clustering has not yet been added. This is a work-in-progress commit to separate the batch correction logic from the clustering step, making the development process more reviewable and allowing independent testing of each component.
 
-These initial visualizations revealed clear batch effects where cells cluster primarily by sample rather than by cell type, indicating the need for batch correction. This is a common issue in multi-sample scATAC-seq experiments and will be addressed with Harmony integration in the next phase.
-
-Next: Implement Harmony batch correction to remove sample-specific technical variation while preserving biological differences.
+Next: Complete this phase by adding Seurat clustering after Harmony correction to identify biologically meaningful cell populations based on chromatin accessibility patterns.

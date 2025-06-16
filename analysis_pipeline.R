@@ -346,3 +346,35 @@ ggsave("pre_batch_effect_umap_tss.png", plot = plot_tss, width = 6, height = 4)
 ggsave("pre_batch_effect_umap_fragments.png", plot = plot_fragments, width = 6, height = 4)
 
 
+# 2.3 Dealing with batch effects
+
+proj <- addHarmony(
+  ArchRProj = proj,
+  reducedDims = "IterativeLSI",  # Use pre-corrected dimensions as input
+  name = "Harmony",     # Name of the Harmony batch correction result
+  groupBy = "Sample",   # Group cells by Sample for correction
+  force = TRUE
+)
+
+proj <- addUMAP(
+  ArchRProj = proj,
+  reducedDims = "Harmony",  # Use Harmony-corrected dimensions
+  name = "UMAP_Harmony",    # Name for the new UMAP embedding
+  nNeighbors = 30,          # Number of neighbors (adjust if needed)
+  minDist = 0.5,            # Minimum distance (adjust if needed)
+  metric = "cosine",        # Metric for UMAP (default is cosine)
+  force = TRUE              # Force overwriting if already present
+)
+
+plot_sample_harmony_umap <- plotEmbedding(
+  ArchRProj = proj, 
+  colorBy = "cellColData", 
+  name = "Sample",                # Color by Sample
+  embedding = "UMAP_Harmony"
+)
+
+plot_TSS_harmony_umap <- plotEmbedding(
+  ArchRProj = proj, 
+  colorBy = "cellColData", 
+  name = "TSSEnrichment",                # Color by TSSEnrichment
+  embedding = "UMAP_Harmony"
