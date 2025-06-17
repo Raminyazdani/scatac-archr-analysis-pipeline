@@ -378,3 +378,58 @@ plot_TSS_harmony_umap <- plotEmbedding(
   colorBy = "cellColData", 
   name = "TSSEnrichment",                # Color by TSSEnrichment
   embedding = "UMAP_Harmony"
+)
+
+plot_frags_harmony_umap <- plotEmbedding(
+  ArchRProj = proj, 
+  colorBy = "cellColData", 
+  name = "nFrags",                # Color by nFrags
+  embedding = "UMAP_Harmony"
+)
+
+# Save plot_DC1R3
+ggsave("post_batch_effect_umap_sample.png", plot = plot_sample_harmony_umap, width = 6, height = 4)
+
+# Save plot_DC2R2_R1
+ggsave("post_batch_effect_umap_tss.png", plot = plot_TSS_harmony_umap, width = 6, height = 4)
+
+# Save plot_DC2R2_R2
+ggsave("post_batch_effect_umap_fragments.png", plot = plot_frags_harmony_umap, width = 6, height = 4)
+
+
+
+# 3 Clustering
+proj <- addClusters(
+  input = proj,
+  reducedDims = "Harmony", 
+  method = "Seurat",
+  name = "Clusters",
+  force = TRUE
+)
+
+
+cluster_plot <- plotEmbedding(
+  ArchRProj = proj, 
+  colorBy = "cellColData", 
+  name = "Clusters", 
+  embedding = "UMAP_Harmony"
+)
+
+cluster_plot
+
+ggsave("cluster_plot_umap.png", plot = cluster_plot, width = 6, height = 4)
+
+
+cluster_cell_counts <- table(proj$Clusters)
+print(cluster_cell_counts)
+
+cluster_sample_proportions <- table(proj$Clusters, proj$Sample)
+print(cluster_sample_proportions)
+
+cluster_sample_percentages <- prop.table(cluster_sample_proportions, margin = 1) * 100
+
+
+
+# Print the result
+print(cluster_sample_percentages)
+
