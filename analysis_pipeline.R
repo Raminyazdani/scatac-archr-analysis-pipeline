@@ -441,10 +441,7 @@ proj <- addGroupCoverages(
   groupBy = "Clusters"  # Use the clusters as groups for peak calling
 )
 
-
-# OOPS: Forgot to call findMacs2() - pathToMacs2 is undefined!
-# pathToMacs2 <- findMacs2()
-
+pathToMacs2 <- findMacs2()
 
 proj <- addReproduciblePeakSet(
   ArchRProj = proj,
@@ -560,4 +557,97 @@ umap_withMagic <- plotEmbedding(
   embedding = "UMAP_Harmony",
   imputeWeights = getImputeWeights(proj)  # Apply MAGIC
 )
+
+combined_plots <- wrap_plots(
+  umap_withMagic, ncol = 1
+) | wrap_plots(
+  umap_noMagic, ncol = 1
+)
+
+# Save the combined layout to a PDF
+pdf("umap_magic_vs_no_magic.pdf", width = 10, height = 20)  # Adjust dimensions
+combined_plots + plot_layout(ncol = 2, widths = c(1, 1)) 
+dev.off()
+
+# 6 Transcription Factor motif activity
+
+# 6.1 Compute TF motif activity
+proj <- addMotifAnnotations(
+  ArchRProj = proj, 
+  motifSet = "cisbp",   # Use the CIS-BP motif database
+  name = "Motif",
+  force=T# Name for the motif annotations
+)
+
+
+
+proj <- addBgdPeaks(proj)
+
+
+proj <- addDeviationsMatrix(
+  ArchRProj = proj, 
+  peakAnnotation = "Motif",  # Use the motif annotations added earlier
+)
+
+
+# 6.2 Plot UMAP embeddings for marker TFs
+# Get variability scores for motifs
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  name = "MotifMatrix", 
+  plot = F  # Plot variability of all motifs
+)
+
+# which are most variable 
+Top_var_motifs <- head(var_motifs,2)
+top_names <-Top_var_motifs$name
+markerMotifs <- getFeatures(proj, select = paste(top_names, collapse="|"), useMatrix = "MotifMatrix")
+markerMotifs_filtered <- grep("^z:", markerMotifs, value = TRUE)
+
+for (motif in markerMotifs_filtered) {
+  # Plot the motif activity on the UMAP
+  plot <- plotEmbedding(
+    ArchRProj = proj,
+    colorBy = "MotifMatrix",  # Use motif activity scores
+    name = motif,            # Correct motif name
+    embedding = "UMAP_Harmony"       # Use UMAP embedding
+  )
+  
+  # Display the plot
+  print(plot)
+  
+  # Save the plot as a PDF
+  plotPDF(
+    plot,
+    name = paste0("UMAP_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  name = "MotifMatrix", 
+  plot = T  # Plot variability of all motifs
+)
+
+# 6.3 Motif activity
+for (motif in markerMotifs_filtered) {
+  plot <- plotGroups(
+    ArchRProj = proj,
+    groupBy = "Clusters",       # Group by clusters
+    colorBy = "MotifMatrix",    # Use motif activity scores
+    name = motif,               # Correct motif name
+    plotAs = "violin"           # Plot as violin plot
+  )
+  
+  print(plot)
+  
+  plotPDF(
+    plot,
+    name = paste0("Violin_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
 
