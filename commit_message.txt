@@ -1,13 +1,12 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(peaks): Fix peak calling by uncommenting pathToMacs2 line
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(genes): Begin Phase 3 - gene activity score computation
 
-Fixed the peak calling bug by uncommenting the pathToMacs2 <- findMacs2() line at line 444. This was a simple oversight during testing - the line was temporarily commented out to test other parts of the pipeline and was not uncommented before committing.
+Started implementing Phase 3: gene activity analysis. Gene activity scores estimate gene expression levels from chromatin accessibility by aggregating ATAC-seq signal in gene promoters and gene bodies. This provides a proxy for gene expression that can be compared with scRNA-seq data and used for cell type annotation.
 
-Peak calling now works correctly:
-1. **MACS2 Detection**: findMacs2() successfully locates the MACS2 installation
-2. **Reproducible Peak Set**: addReproduciblePeakSet() identifies peaks present in multiple pseudo-bulk replicates, ensuring robustness
-3. **Peak Matrix**: addPeakMatrix() creates a peak-by-cell matrix for quantitative analysis
-4. **Marker Peaks**: getMarkerFeatures() identifies cluster-specific accessible peaks for cell type characterization
+Current implementation includes:
+- addGeneScoreMatrix() setup to compute accessibility-based gene scores
+- Beginning of addGeneIntegrationMatrix() for scRNA-seq integration
+- Initial marker gene identification framework
 
-The complete peak calling pipeline is now functional and produces a comprehensive peak matrix ready for downstream analyses like marker identification, differential accessibility, and TF motif enrichment.
+This is work in progress - the gene score matrix computation is initiated but MAGIC imputation and complete integration with the scRNA-seq reference (new_pbmc.rds) will be added in the next commit to complete this analytical phase.
 
-Verified: Peak calling completed successfully, marker peaks identified for each cluster.
+Next: Complete gene activity analysis with MAGIC imputation for denoising and full scRNA-seq integration for cell type annotation.
