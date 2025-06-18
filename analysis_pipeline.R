@@ -433,3 +433,131 @@ cluster_sample_percentages <- prop.table(cluster_sample_proportions, margin = 1)
 # Print the result
 print(cluster_sample_percentages)
 
+# 4 Peaks
+
+# 4.1 Peak calling
+proj <- addGroupCoverages(
+  ArchRProj = proj,
+  groupBy = "Clusters"  # Use the clusters as groups for peak calling
+)
+
+
+# OOPS: Forgot to call findMacs2() - pathToMacs2 is undefined!
+# pathToMacs2 <- findMacs2()
+
+
+proj <- addReproduciblePeakSet(
+  ArchRProj = proj,
+  groupBy = "Clusters",  # Use the clusters for peak calling
+  pathToMacs2 = pathToMacs2
+)
+
+proj <- addPeakMatrix(proj)
+
+# 4.2 Cluster marker peaks
+
+markersPeaks <- getMarkerFeatures(
+  ArchRProj = proj, 
+  useMatrix = "PeakMatrix", 
+  groupBy = "Clusters",
+  bias = c("TSSEnrichment", "log10(nFrags)"),  # Correcting for biases
+  testMethod = "wilcoxon"  # Wilcoxon rank-sum test for statistical testing
+)
+
+
+heatmapPeaks <- plotMarkerHeatmap(
+  seMarker = markersPeaks, 
+  # cutOff = "FDR <= 0.05 & Log2FC >= 1", 
+  transpose = TRUE
+)
+ComplexHeatmap::draw(heatmapPeaks, heatmap_legend_side = "bottom")
+heatmapPeaks
+
+pdf("heatmap_peaks.pdf", width = 8, height = 6)  # Specify file name and dimensions
+ComplexHeatmap::draw(heatmapPeaks, heatmap_legend_side = "bottom")
+dev.off()  # Close the PDF device
+
+genes <- c("TOP2A", "MKI67", "AURKA", "SATB2", "SLC12A7")
+plots <- lapply(genes, function(gene) {
+  plotBrowserTrack(
+    ArchRProj = proj,
+    groupBy = "Clusters",
+    geneSymbol = gene,
+    upstream = 50000,   # Adjust range as needed
+    downstream = 50000
+  )
+})
+
+# Save each plot
+
+
+for (i in seq_along(genes)) {
+  plot <- plots[[i]][[1]]  # Extract the first grob (main plot)
+  ggsave(
+    filename = paste0(project_dir,"/",genes[i], "_browser_track.pdf"),
+    plot = plot,
+    width = 8, height = 6
+  )
+}
+
+
+# Phase 3: Gene Activity Analysis
+# 5 Gene activity
+
+
+# 5.1 Compute gene activity scores using chromatin accessibility
+proj <- addGeneScoreMatrix(proj,force = T)
+
+
+# 5.2 Identify Marker genes
+
+markersGene <- getMarkerFeatures(
+  ArchRProj = proj, 
+  useMatrix = "GeneScoreMatrix", 
+  groupBy = "Clusters", 
+  bias = c("TSSEnrichment", "log10(nFrags)"),  # Correct for biases
+  testMethod = "wilcoxon"  # Statistical test
+) 
+
+markerList <- getMarkers(
+  seMarker = markersGene, 
+  # cutOff = "FDR <= 0.05 & Log2FC >= 1"
+)
+
+for (cluster in names(markerList)) {
+  # Extract the marker genes for the current cluster
+  cluster_markers <- markerList[[cluster]]
+  
+  # Get the first 5 marker genes (row names)
+  top_genes <- head(rownames(cluster_markers), 5)
+  
+  # Print the cluster name and the first 5 marker genes
+  cat("Cluster:", cluster, "\n")
+  print(top_genes)
+  cat("\n")
+}
+
+
+# 5.3 Using MAGIC
+
+topGenes <- c("TOP2A", "MKI67", "AURKA", "SATB2", "SLC12A7")  # Example gene list
+
+# 5.3.1 without magic
+umap_noMagic <- plotEmbedding(
+  ArchRProj = proj,
+  colorBy = "GeneScoreMatrix",
+  name = topGenes,
+  embedding = "UMAP_Harmony"
+)
+
+# 5.3.2 with magic
+proj <- addImputeWeights(proj)  # Add imputation weights for MAGIC
+
+umap_withMagic <- plotEmbedding(
+  ArchRProj = proj,
+  colorBy = "GeneScoreMatrix",
+  name = topGenes,
+  embedding = "UMAP_Harmony",
+  imputeWeights = getImputeWeights(proj)  # Apply MAGIC
+)
+

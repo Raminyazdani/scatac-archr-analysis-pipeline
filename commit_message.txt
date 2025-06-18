@@ -1,13 +1,15 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(cluster): Complete Phase 2 - Harmony correction and clustering
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(peaks): Attempt peak calling - ERROR: pathToMacs2 not found
 
-Completed Phase 2 by adding Seurat clustering to the Harmony-corrected embeddings. This phase successfully addresses the batch effects observed earlier:
+Attempted to add peak calling functionality but encountered a runtime error. Peak calling is essential for identifying reproducible accessible chromatin regions across cell populations, forming the basis for downstream analyses like differential accessibility and TF motif enrichment.
 
-1. **Harmony Batch Correction**: Applied Harmony to the LSI dimensions using Sample as the batch variable. Harmony successfully removed sample-specific technical variation - cells now cluster by cell type rather than by sample origin.
+ERROR: "object 'pathToMacs2' not found" when calling addReproduciblePeakSet(). The issue is that the pathToMacs2 <- findMacs2() line is commented out at line 444, so the variable is undefined when later referenced.
 
-2. **Seurat Clustering**: Implemented graph-based clustering using Seurat's algorithm (adapted for ArchR). The clustering identifies biologically meaningful cell populations based on chromatin accessibility patterns. Default resolution parameters provide balanced granularity for PBMC data.
+Implementation includes:
+- Pseudo-bulk replicates creation (groupBy = "Clusters")
+- MACS2 path detection (COMMENTED OUT - causing the bug)
+- addReproduciblePeakSet() call with standard parameters
 
-3. **Updated Visualizations**: Generated new UMAPs colored by Clusters, confirming that cells now group by biological similarity (cell type) rather than technical batch (sample ID).
+Need to debug and fix the pathToMacs2 initialization before peak calling can proceed.
 
-The pipeline now has clean, batch-corrected embeddings with biologically interpretable clusters, ready for downstream analyses like peak calling and cell type annotation.
-
-Verified: UMAP plots show clear separation between cell populations with no remaining sample-driven batch effects.
+BUG LOCATION: Line 444 - pathToMacs2 <- findMacs2() is commented out
+IMPACT: Cannot complete peak calling, blocking all downstream peak-based analyses
