@@ -543,3 +543,29 @@ topGenes <- c("TOP2A", "MKI67", "AURKA", "SATB2", "SLC12A7")  # Example gene lis
 umap_noMagic <- plotEmbedding(
   ArchRProj = proj,
   colorBy = "GeneScoreMatrix",
+  name = topGenes,
+  embedding = "UMAP_Harmony"
+)
+
+# 5.3.2 with magic
+proj <- addImputeWeights(proj)  # Add imputation weights for MAGIC
+
+umap_withMagic <- plotEmbedding(
+  ArchRProj = proj,
+  colorBy = "GeneScoreMatrix",
+  name = topGenes,
+  embedding = "UMAP_Harmony",
+  imputeWeights = getImputeWeights(proj)  # Apply MAGIC
+)
+
+combined_plots <- wrap_plots(
+  umap_withMagic, ncol = 1
+) | wrap_plots(
+  umap_noMagic, ncol = 1
+)
+
+# Save the combined layout to a PDF
+pdf("umap_magic_vs_no_magic.pdf", width = 10, height = 20)  # Adjust dimensions
+combined_plots + plot_layout(ncol = 2, widths = c(1, 1)) 
+dev.off()
+
