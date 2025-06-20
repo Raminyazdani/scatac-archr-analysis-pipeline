@@ -1,12 +1,12 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(genes): Begin Phase 3 - gene activity score computation
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(genes): Add MAGIC imputation - incomplete marker visualization
 
-Started implementing Phase 3: gene activity analysis. Gene activity scores estimate gene expression levels from chromatin accessibility by aggregating ATAC-seq signal in gene promoters and gene bodies. This provides a proxy for gene expression that can be compared with scRNA-seq data and used for cell type annotation.
+Continued Phase 3 gene activity analysis by adding MAGIC (Markov Affinity-based Graph Imputation of Cells) imputation to denoise gene activity scores. MAGIC leverages the manifold structure of the data to smooth gene activity values, improving signal-to-noise ratio for visualization and interpretation.
 
-Current implementation includes:
-- addGeneScoreMatrix() setup to compute accessibility-based gene scores
-- Beginning of addGeneIntegrationMatrix() for scRNA-seq integration
-- Initial marker gene identification framework
+Progress made:
+- Successfully computed gene score matrices with addGeneScoreMatrix()
+- Started MAGIC imputation setup with addImputeWeights()
+- Beginning of marker gene visualization framework
 
-This is work in progress - the gene score matrix computation is initiated but MAGIC imputation and complete integration with the scRNA-seq reference (new_pbmc.rds) will be added in the next commit to complete this analytical phase.
+However, the marker gene visualization section is incomplete - plotting code for CD14, MS4A1, and other key marker genes is not yet functional. These visualizations are critical for validating cell type assignments and ensuring the gene activity scores accurately reflect biology.
 
-Next: Complete gene activity analysis with MAGIC imputation for denoising and full scRNA-seq integration for cell type annotation.
+Next commit: Complete marker gene visualizations and verify that gene activity patterns match expected cell type-specific expression profiles before proceeding to TF motif analysis.
