@@ -1,16 +1,16 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(genes): Complete Phase 3 - gene activity and MAGIC imputation
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(motifs): Add TF motif enrichment - ERROR: wrong parameter name
 
-Completed Phase 3 with full gene activity analysis and MAGIC-imputed visualizations:
+Attempted to implement transcription factor (TF) motif enrichment analysis but encountered a parameter name error. TF motif analysis is crucial for understanding the regulatory mechanisms driving chromatin accessibility differences between cell types.
 
-1. **Gene Score Matrix**: Successfully computed chromatin accessibility-based gene activity scores for all genes, providing a proxy for gene expression directly from ATAC-seq data.
+Implementation includes:
+- addMotifAnnotations() to annotate peaks with TF binding motifs (using JASPAR database)
+- addBgdPeaks() to create background peak set for statistical testing
+- addDeviationsMatrix() to compute chromVAR deviation scores (motif activity)
+- getVarDeviations() to identify variable motifs - BUT USING WRONG PARAMETER
 
-2. **MAGIC Imputation**: Applied MAGIC (Markov Affinity-based Graph Imputation) to denoise gene scores by leveraging cell-cell similarity. This dramatically improves visualization quality and reduces technical noise.
+ERROR: "unused argument (matrix = 'MotifMatrix')" when calling getVarDeviations(). The function expects parameter name 'name' not 'matrix'. This is a common confusion with ArchR functions that have similar parameter patterns.
 
-3. **Marker Gene Validation**: Generated UMAP plots for key PBMC marker genes (CD14, MS4A1, CD3E, CD8A, etc.) showing expected cell type-specific patterns:
-   - CD14 high in monocytes
-   - MS4A1 (CD20) high in B cells
-   - CD3E/CD8A high in T cells
-   
-4. **Integration Preparation**: Gene scores are now ready for integration with scRNA-seq reference data (new_pbmc.rds) for precise cell type annotation.
+BUG LOCATION: getVarDeviations() call - using matrix = "MotifMatrix" instead of name = "MotifMatrix"
+IMPACT: Cannot identify variable TF motifs, blocking downstream TF activity analysis and cell type-specific regulatory insights
 
-Verified: Marker gene expression patterns match expected PBMC cell type distributions, confirming the quality of gene activity score computation and MAGIC imputation.
+Need to fix parameter name in next commit.

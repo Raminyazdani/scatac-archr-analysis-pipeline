@@ -569,3 +569,32 @@ pdf("umap_magic_vs_no_magic.pdf", width = 10, height = 20)  # Adjust dimensions
 combined_plots + plot_layout(ncol = 2, widths = c(1, 1)) 
 dev.off()
 
+# 6 Transcription Factor motif activity
+
+# 6.1 Compute TF motif activity
+proj <- addMotifAnnotations(
+  ArchRProj = proj, 
+  motifSet = "cisbp",   # Use the CIS-BP motif database
+  name = "Motif",
+  force=T# Name for the motif annotations
+)
+
+
+
+proj <- addBgdPeaks(proj)
+
+
+proj <- addDeviationsMatrix(
+  ArchRProj = proj, 
+  peakAnnotation = "Motif",  # Use the motif annotations added earlier
+)
+
+
+# 6.2 Plot UMAP embeddings for marker TFs
+# Get variability scores for motifs
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  matrix = "MotifMatrix"  # BUG: wrong param, 
+  plot = F  # Plot variability of all motifs
+)
+
