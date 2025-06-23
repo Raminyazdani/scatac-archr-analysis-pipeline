@@ -594,7 +594,60 @@ proj <- addDeviationsMatrix(
 # Get variability scores for motifs
 var_motifs <- getVarDeviations(
   ArchRProj = proj, 
-  matrix = "MotifMatrix"  # BUG: wrong param, 
+  name = "MotifMatrix", 
   plot = F  # Plot variability of all motifs
 )
+
+# which are most variable 
+Top_var_motifs <- head(var_motifs,2)
+top_names <-Top_var_motifs$name
+markerMotifs <- getFeatures(proj, select = paste(top_names, collapse="|"), useMatrix = "MotifMatrix")
+markerMotifs_filtered <- grep("^z:", markerMotifs, value = TRUE)
+
+for (motif in markerMotifs_filtered) {
+  # Plot the motif activity on the UMAP
+  plot <- plotEmbedding(
+    ArchRProj = proj,
+    colorBy = "MotifMatrix",  # Use motif activity scores
+    name = motif,            # Correct motif name
+    embedding = "UMAP_Harmony"       # Use UMAP embedding
+  )
+  
+  # Display the plot
+  print(plot)
+  
+  # Save the plot as a PDF
+  plotPDF(
+    plot,
+    name = paste0("UMAP_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  name = "MotifMatrix", 
+  plot = T  # Plot variability of all motifs
+)
+
+# 6.3 Motif activity
+for (motif in markerMotifs_filtered) {
+  plot <- plotGroups(
+    ArchRProj = proj,
+    groupBy = "Clusters",       # Group by clusters
+    colorBy = "MotifMatrix",    # Use motif activity scores
+    name = motif,               # Correct motif name
+    plotAs = "violin"           # Plot as violin plot
+  )
+  
+  print(plot)
+  
+  plotPDF(
+    plot,
+    name = paste0("Violin_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
 
