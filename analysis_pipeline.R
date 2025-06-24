@@ -651,3 +651,50 @@ for (motif in markerMotifs_filtered) {
   )
 }
 
+# 7 Integration with gene expression
+
+# 7.1 Data integration
+# Load the scRNA-seq data
+rna_data <- readRDS(rna_pbmc_path)
+
+
+proj <- addGeneIntegrationMatrix(
+  ArchRProj = proj, 
+  seRNA = rna_data,
+  addToArrow = T,
+  groupRNA = "Cluster.Name",
+  force = T,
+  reducedDims = "Harmony"
+)
+
+gene_plots <- list()
+marker_genes <- c("ID4", "EGR1", "OLIG2","SOX21","NEUROD1","NFIA","FOS","MEIS2","SOX10","NEUROG2","ASCL1","HES5","NHLH1","PBX1","EOMES")
+
+for (gene in marker_genes) {
+  plot <- plotEmbedding(
+    ArchRProj = proj,
+    colorBy = "GeneIntegrationMatrix",  # Use the integrated matrix
+    name = gene,                       # Gene name
+    embedding = "UMAP_Harmony"                 # UMAP embedding
+  )
+  
+  # Display the plot
+  print(plot)
+  gene_plots[[gene]] <- plot
+  # Save the plot as a PDF
+  plotPDF(
+    plot,
+    name = paste0("UMAP_GeneExpression_", gene, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+
+combined_gene_plots <- wrap_plots(gene_plots, ncol = 4, nrow = 4)
+
+# Save the combined grid to a single PDF
+pdf("UMAP_GeneExpression_Grid_Spaced.pdf", width = 20, height = 20)
+combined_plots <- wrap_plots(gene_plots, ncol = 4, nrow = 4) +
+  plot_layout(widths = c(1, 1, 1,1), heights = c(1, 1, 1, 1))
+print(combined_plots)
+dev.off()

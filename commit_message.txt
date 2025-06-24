@@ -1,17 +1,12 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | feat(motifs): Fix TF motif analysis parameter and complete implementation
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(integration): Begin scRNA-seq integration for cell type annotation
 
-Fixed the TF motif analysis by correcting the parameter name from matrix = "MotifMatrix" to name = "MotifMatrix" in the getVarDeviations() call. This was a simple parameter name confusion - ArchR functions use 'name' to specify which matrix to operate on, while 'matrix' is used in some other contexts.
+Started implementing scRNA-seq integration to transfer cell type labels from a well-annotated scRNA-seq PBMC reference dataset (new_pbmc.rds) to the scATAC-seq cells. This integration leverages gene activity scores computed from chromatin accessibility to find correspondence with actual gene expression profiles.
 
-Complete TF motif enrichment analysis now includes:
+Progress made:
+- addGeneIntegrationMatrix() setup to prepare gene scores for integration
+- Beginning of integration with Seurat scRNA-seq reference object
+- Framework for constrained integration ensuring biologically plausible cell type assignments
 
-1. **Motif Annotation**: All peaks annotated with TF binding motifs from JASPAR database (~750 TF motifs)
+The integration uses canonical correlation analysis (CCA) to identify shared variation between scATAC gene scores and scRNA-seq expression, enabling accurate cell type label transfer. This is partially complete - the integration matrix is computed but transfer and validation steps are not yet implemented.
 
-2. **Background Peaks**: Statistically matched background peak set accounting for GC content and accessibility to control for biases
-
-3. **ChromVAR Deviations**: Computed per-cell deviation scores representing TF activity levels, accounting for technical variation and background signal
-
-4. **Variable Motifs**: Identified TFs with significant activity variation across cell populations using proper 'name' parameter
-
-5. **Motif Enrichment**: getEnrichedMotifs() identifies TFs with differential activity between clusters, revealing cell type-specific regulatory programs
-
-Verified: TF motif analysis complete, generating enrichment plots and UMAP visualizations of TF activity patterns. Key lineage-specific TFs (e.g., SPI1 for myeloid, PAX5 for B cells) show expected patterns.
+Next: Complete the integration by transferring cell type labels, generating integration UMAPs, and validating assignments against marker gene patterns observed in Phase 3.
