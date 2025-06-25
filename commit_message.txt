@@ -1,12 +1,15 @@
-Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(integration): Begin scRNA-seq integration for cell type annotation
+Ramin Yazdani | scatac-archr-analysis-pipeline | main | WIP(differential): Add Phase 4 - differential accessibility analysis
 
-Started implementing scRNA-seq integration to transfer cell type labels from a well-annotated scRNA-seq PBMC reference dataset (new_pbmc.rds) to the scATAC-seq cells. This integration leverages gene activity scores computed from chromatin accessibility to find correspondence with actual gene expression profiles.
+Started implementing Phase 4: differential accessibility and advanced analyses. This phase identifies peaks with significantly different accessibility between cell populations, revealing cell type-specific regulatory elements.
 
-Progress made:
-- addGeneIntegrationMatrix() setup to prepare gene scores for integration
-- Beginning of integration with Seurat scRNA-seq reference object
-- Framework for constrained integration ensuring biologically plausible cell type assignments
+Progress includes:
+- getMarkerFeatures() for differential peak accessibility between clusters
+- Beginning of MA plots and volcano plots for visualization
+- Framework for TF motif enrichment in differential peaks
+- Setup for peak-to-gene linkage analysis
 
-The integration uses canonical correlation analysis (CCA) to identify shared variation between scATAC gene scores and scRNA-seq expression, enabling accurate cell type label transfer. This is partially complete - the integration matrix is computed but transfer and validation steps are not yet implemented.
+Differential accessibility testing uses statistical methods to identify peaks that are significantly more accessible in one cluster versus others, accounting for multiple testing. These differential peaks often contain cell type-specific enhancers and regulatory elements.
 
-Next: Complete the integration by transferring cell type labels, generating integration UMAPs, and validating assignments against marker gene patterns observed in Phase 3.
+Partial implementation - the differential testing framework is in place but visualization code, TF enrichment in differential peaks, and peak-to-gene correlation analyses are not yet complete. These advanced features require the differential testing results to be finalized first.
+
+Next: Complete differential visualization, add TF footprinting, and implement co-accessibility analysis to identify regulatory networks.

@@ -698,3 +698,153 @@ combined_plots <- wrap_plots(gene_plots, ncol = 4, nrow = 4) +
   plot_layout(widths = c(1, 1, 1,1), heights = c(1, 1, 1, 1))
 print(combined_plots)
 dev.off()
+
+# 7.2 Correlation Coefficients
+cor_results <- correlateMatrices(
+  ArchRProj = proj,
+  useMatrix1 = "GeneIntegrationMatrix",  # Gene expression from scRNA-seq
+  useMatrix2 = "GeneScoreMatrix",        # Gene activity from scATAC-seq
+  reducedDims = "Harmony"
+)
+
+# Identify genes with highest/lowest agreement
+highest_agreement <- cor_results[which.max(cor_results$cor), ]
+lowest_agreement <- cor_results[which.min(cor_results$cor), ]
+
+print("Gene with highest agreement:")
+print(highest_agreement)
+
+print("Gene with lowest agreement:")
+print(lowest_agreement)
+
+# 7.3 Cluster labels from gene expression
+plotEmbedding(
+  ArchRProj = proj,
+  colorBy = "cellColData",
+  name = "predictedGroup",
+  embedding = "UMAP_Harmony"
+)
+
+proj$Clusters <- proj$predictedGroup
+
+confusion_matrix <- table(
+  ATAC_Clusters = proj$Clusters,
+  RNA_Labels = proj$predictedGroup
+)
+
+print(confusion_matrix)
+
+# 8 Peak-gene linkage
+proj <- addPeak2GeneLinks(
+  ArchRProj = proj,
+  reducedDims = "Harmony"  # Use reduced dimensions from scATAC-seq
+)
+
+peak2gene_links <- getPeak2GeneLinks(
+  ArchRProj = proj,
+  corCutOff = 0.5,
+  resolution = 100000
+)
+
+peak2gene_links[[1]]
+
+peak_heatmap <- plotPeak2GeneHeatmap(ArchRProj = proj)
+
+pdf("peak2gene_heatmap.pdf", width = 10, height = 8)  # Adjust dimensions as needed
+ComplexHeatmap::draw(peak_heatmap)  # Render the heatmap
+dev.off()  # Close the PDF device
+
+# Phase 4: Differential Analysis
+# 9 Differential accessibility
+proj <- addMotifAnnotations(ArchRProj = proj, motifSet = "cisbp", name = "Motif",force = T)
+# 9.1 Differential peak accessibility
+differential_peaks <- getMarkerFeatures(
+  ArchRProj = proj,
+  useMatrix = "PeakMatrix",
+  groupBy = "Clusters",
+  testMethod = "binomial",
+  useGroups = "GluN5",
+  bgdGroups = "Cyc. Prog.",
+  binarize = T
+)
+
+differential_peaks
+
+differential_peaks_df <- as.data.frame(rowData(differential_peaks))
+differential_peaks_df$Log2FC <- assay(differential_peaks, "Log2FC")[, 1]
+differential_peaks_df$FDR <- assay(differential_peaks, "FDR")[, 1]
+
+top_differential_peaks <- differential_peaks_df %>%
+  arrange(FDR, desc(abs(Log2FC)))
+
+
+top_differential_peaks
+
+table(proj$Clusters)
+
+pma <- plotMarkers(seMarker = differential_peaks, name = "GluN5",plotAs = "MA",cutOff ="FDR <= 0.6 & abs(Log2FC) >= 2")
+pma
+
+pv <- plotMarkers(seMarker = differential_peaks, name = "GluN5", plotAs = "Volcano",cutOff ="FDR <= 0.6 & abs(Log2FC) >= 2")
+pv
+
+ggsave("glun5_vs_cyc_MA.png", plot = pma, width = 6, height = 4)
+
+ggsave("glun5_vs_cyc_volcan.png", plot = pv, width = 6, height = 4)
+
+
+# 9.2 TF motif enrichment
+motifsUp <- peakAnnoEnrichment(
+  seMarker = differential_peaks,
+  ArchRProj = proj,
+  peakAnnotation = "Motif",
+  cutOff = "Log2FC >= 2"
+)
+
+df_up <- data.frame(
+  TF = rownames(motifsUp),
+  mlog10Padj = assay(motifsUp)[, 1]
+)
+df_up <- df_up[order(df_up$mlog10Padj, decreasing = TRUE), ]
+df_up$rank <- seq_len(nrow(df_up))
+
+# Plot for upregulated motifs
+ggUp <- ggplot(df_up, aes(rank, mlog10Padj, color = mlog10Padj)) +
+  geom_point(size = 1) +
+  ggrepel::geom_label_repel(
+    data = head(df_up, 30),  # Top 30 motifs
+    aes(x = rank, y = mlog10Padj, label = TF),
+    size = 1.5,
+    nudge_x = 2,
+    color = "black"
+  ) +
+  theme_ArchR() +
+  ylab("-log10(P-adj) Motif Enrichment") +
+  xlab("Rank Sorted TFs Enriched") +
+  scale_color_gradientn(colors = paletteContinuous(set = "comet"))
+
+print(ggUp)
+
+
+
+motifsDo <- peakAnnoEnrichment(
+  seMarker = differential_peaks,
+  ArchRProj = proj,
+  peakAnnotation = "Motif",
+  cutOff = "Log2FC <= -2"
+)
+
+df_do <- data.frame(
+  TF = rownames(motifsDo),
+  mlog10Padj = assay(motifsDo)[, 1]
+)
+df_do <- df_do[order(df_do$mlog10Padj, decreasing = TRUE), ]
+df_do$rank <- seq_len(nrow(df_do))
+
+# Plot for downregulated motifs
+ggDo <- ggplot(df_do, aes(rank, mlog10Padj, color = mlog10Padj)) +
+  geom_point(size = 1) +
+  ggrepel::geom_label_repel(
+    data = head(df_do, 30),  # Top 30 motifs
+    aes(x = rank, y = mlog10Padj, label = TF),
+    size = 1.5,
