@@ -1,0 +1,12 @@
+FILE	LOCATOR	BEFORE_SNIPPET	AFTER_SNIPPET	NOTES
+prJ.R	filename	prJ.R	analysis_pipeline.R	Renamed to more descriptive professional name
+analysis_pipeline.R	line 38	# week 0	# Configuration & Initialization	Removed academic weekly structure
+analysis_pipeline.R	line 110	# Week1	# Phase 1: Preprocessing and Quality Control	Removed academic weekly structure
+analysis_pipeline.R	line 279	# Week 2	# Phase 2: Dimensionality Reduction	Removed academic weekly structure
+analysis_pipeline.R	line 501	# Week 3	# Phase 3: Gene Activity Analysis	Removed academic weekly structure
+analysis_pipeline.R	line 757	# Week4	# Phase 4: Differential Analysis	Removed academic weekly structure
+README.md	line 3	**Project Type:** University Project	[REMOVED]	Removed academic framing
+README.md	line 8	This is a Single Cell Bioinformatics project (Project 2)	Comprehensive chromatin accessibility analysis workflow...	Replaced with professional description
+README.md	entire file	Academic README structure	Portfolio-grade README with comprehensive sections	Complete restructure: added badges, detailed sections (Overview, Features, Installation, Usage, Data Requirements, Output Structure, Configuration, Troubleshooting, Citation)
+README.md	lines 22-28, 36-42, 69, 86	SCB2/ folder references	[REMOVED]	Removed all references to old folder structure
+.gitignore	N/A (new file)	[DID NOT EXIST]	Created comprehensive R project .gitignore	Prevents committing generated files (data/, results/, ArchR files, plots, etc.)
