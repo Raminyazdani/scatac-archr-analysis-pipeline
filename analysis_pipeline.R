@@ -848,3 +848,132 @@ ggDo <- ggplot(df_do, aes(rank, mlog10Padj, color = mlog10Padj)) +
     data = head(df_do, 30),  # Top 30 motifs
     aes(x = rank, y = mlog10Padj, label = TF),
     size = 1.5,
+    nudge_x = 2,
+    color = "black"
+  ) +
+  theme_ArchR() +
+  ylab("-log10(FDR) Motif Enrichment") +
+  xlab("Rank Sorted TFs Enriched") +
+  scale_color_gradientn(colors = paletteContinuous(set = "comet"))
+
+print(ggDo)
+
+
+
+ggsave("tf_motif_enriched_GluN5.png", plot = ggUp, width = 6, height = 4)
+
+ggsave("tf_motif_enriched_Cyc.png", plot = ggDo, width = 6, height = 4)
+
+differential_peaks <- getMarkerFeatures(
+  ArchRProj = proj,
+  useMatrix = "PeakMatrix",
+  groupBy = "Clusters",
+  testMethod = "wilcoxon",
+  useGroups = "GluN5",
+  bgdGroups = "Cyc. Prog.",
+  binarize = T
+)
+
+motifsAL <- peakAnnoEnrichment(
+  seMarker = differential_peaks,
+  ArchRProj = proj,
+  peakAnnotation = "Motif",
+  cutOff = "abs(FDR) != 0"
+)
+
+
+heatmapEncode <- plotEnrichHeatmap(motifsAL, n = 150, transpose = TRUE,cutOff = 1)
+
+ComplexHeatmap::draw(heatmapEncode, heatmap_legend_side = "bot", annotation_legend_side = "bot")
+plotPDF(heatmapEncode, name = "EncodeTFBS-Enriched-Marker-Heatmap", width = 8, height = 6, ArchRProj = proj, addDOC = FALSE)
+# 10 TF footprinting 
+
+# 10.1 Obtaining footprints on feature set
+motifPositions <- getPositions(proj)
+
+top_three_cyc = subset(df_up, rank < 4)
+top_three_GluN5=subset(df_do, rank <4 )
+df_tot = rbind(top_three_GluN5,top_three_cyc)
+
+
+seFoot <- getFootprints(
+  ArchRProj = proj, 
+  positions = motifPositions[df_tot$TF], 
+  groupBy = "Clusters",
+)
+
+
+
+
+# 10.2 Normalization for Tn5 Bias
+
+
+plotFootprints(
+  seFoot = seFoot,
+  ArchRProj = proj, 
+  normMethod = "Divide",
+  plotName = "Footprints-Divide-Bias",
+  addDOC = FALSE,
+  smoothWindow = 5
+)
+# 11 (Bonus) Co-accessibility
+
+
+# 11.1 Co-accessibility of peaks
+
+proj <- addCoAccessibility(
+  ArchRProj = proj,
+  reducedDims = "Harmony"
+)
+
+cA <- getCoAccessibility(
+  ArchRProj = proj,
+  corCutOff = 0.5,
+  resolution = 10000,
+  returnLoops = TRUE
+)
+
+topGenes <- c("TOP2A", "MKI67")  # Example gene list
+
+
+
+
+p <- plotBrowserTrack(
+  ArchRProj = proj, 
+  groupBy = "Clusters", 
+  geneSymbol = topGenes, 
+  upstream = 50000,
+  downstream = 50000,
+  loops = cA
+)
+
+plotPDF(plotList = p, 
+        name = "Plot-Tracks-Marker-Genes-with-CoAccessibility.pdf", 
+        ArchRProj = proj, 
+        addDOC = FALSE, width = 5, height = 5)
+# 11.2 Identify potential enhancers for marker genes
+
+
+markerGenes <- c("ID4", "EGR1", "OLIG2","SOX21","NEUROD1","NFIA","FOS","MEIS2","SOX10","NEUROG2","ASCL1","HES5","NHLH1","PBX1","EOMES")
+
+
+p2gLinks <- getPeak2GeneLinks(
+  ArchRProj = proj,
+  corCutOff = 0.4,    # Correlation cutoff for significant links
+  resolution = 10000,  # Resolution for peak-to-gene analysis
+  returnLoops = TRUE  # Return co-accessibility loops
+)
+
+p <- plotBrowserTrack(
+  ArchRProj = proj, 
+  groupBy = "Clusters", 
+  geneSymbol = markerGenes, 
+  upstream = 50000,
+  downstream = 50000,
+  loops = p2gLinks
+)
+
+plotPDF(plotList = p, 
+        name = "Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf", 
+        ArchRProj = proj, 
+        addDOC = FALSE, width = 5, height = 5)
