@@ -35,9 +35,9 @@
 
 
 
-# Configuration and initialization
+# week 0
 
-# 0 initialization
+# 0 initialation
 # 0.1 libraries
 
 library(ArchR)
@@ -107,7 +107,8 @@ if (!file.exists(rna_pbmc_path)) {
 
 
 
-# 1. Preprocessing and Quality Control
+# Week1
+# 1 Preprocessing and quality coontrol
 
 # 1.1 Set up the environment
 addArchRThreads(arch_r_threads)
@@ -138,7 +139,7 @@ ArrowFiles <- list.files(project_dir, pattern = "arrow$", full.names = TRUE)
 
 original_proj <-ArchRProject(
   ArrowFiles = ArrowFiles,  # Provide the list of Arrow file paths here
-  outputDirectory = file.path(result_dir, "ArchRProject")  # Define the output directory for results
+  outputDirectory = "ArchRProject"  # Define the output directory for results
 )
 
 # 1.3 identify doublets
@@ -218,15 +219,9 @@ create_fragments_tss_plot <- function(proj, sample_name) {
     ) +
     geom_smooth(method = "loess", color = "red", se = TRUE)
   
-  # Create QC directory for this sample
-  qc_sample_dir <- file.path(result_dir, "qc", sample_name)
-  if (!dir.exists(qc_sample_dir)) {
-    dir.create(qc_sample_dir, recursive = TRUE)
-  }
-  
   # Save plot
   ggsave(
-    filename = file.path(qc_sample_dir, "fragments_tss_plot.pdf"), 
+    filename = paste0("./QualityControl/",sample_name, "/fragments_tss_plot.pdf"), 
     plot = p, 
     width = 8, 
     height = 6
@@ -281,7 +276,8 @@ ggsave("plot_DC2R2_R2.png", plot = plot_DC2R2_R2, width = 6, height = 4)
 # no need since the plots are ok
 
 
-# 2. Dimensionality Reduction and Clustering
+# Week 2 
+# 2 Dimensionality Reduction
 
 # 2.1 Iterative LSI
 proj <- addIterativeLSI(
@@ -502,8 +498,7 @@ for (i in seq_along(genes)) {
 }
 
 
-# 3. Gene Activity and Motif Analysis
-
+# Week 3
 # 5 Gene activity
 
 
@@ -759,8 +754,7 @@ pdf("peak2gene_heatmap.pdf", width = 10, height = 8)  # Adjust dimensions as nee
 ComplexHeatmap::draw(peak_heatmap)  # Render the heatmap
 dev.off()  # Close the PDF device
 
-# 4. Differential Accessibility and TF Footprinting
-
+# Week4
 # 9 Differential accessibility
 proj <- addMotifAnnotations(ArchRProj = proj, motifSet = "cisbp", name = "Motif",force = T)
 # 9.1 Differential peak accessibility
