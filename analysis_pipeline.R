@@ -35,7 +35,7 @@
 
 
 
-# week 0
+# Configuration & Initialization
 
 # 0 initialation
 # 0.1 libraries
@@ -107,7 +107,7 @@ if (!file.exists(rna_pbmc_path)) {
 
 
 
-# Week1
+# Phase 1: Preprocessing and Quality Control
 # 1 Preprocessing and quality coontrol
 
 # 1.1 Set up the environment
@@ -276,7 +276,7 @@ ggsave("plot_DC2R2_R2.png", plot = plot_DC2R2_R2, width = 6, height = 4)
 # no need since the plots are ok
 
 
-# Week 2 
+# Phase 2: Dimensionality Reduction
 # 2 Dimensionality Reduction
 
 # 2.1 Iterative LSI
@@ -498,7 +498,7 @@ for (i in seq_along(genes)) {
 }
 
 
-# Week 3
+# Phase 3: Gene Activity Analysis
 # 5 Gene activity
 
 
@@ -754,7 +754,7 @@ pdf("peak2gene_heatmap.pdf", width = 10, height = 8)  # Adjust dimensions as nee
 ComplexHeatmap::draw(peak_heatmap)  # Render the heatmap
 dev.off()  # Close the PDF device
 
-# Week4
+# Phase 4: Differential Analysis
 # 9 Differential accessibility
 proj <- addMotifAnnotations(ArchRProj = proj, motifSet = "cisbp", name = "Motif",force = T)
 # 9.1 Differential peak accessibility
