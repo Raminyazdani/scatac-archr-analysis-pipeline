@@ -441,10 +441,7 @@ proj <- addGroupCoverages(
   groupBy = "Clusters"  # Use the clusters as groups for peak calling
 )
 
-
-# OOPS: Forgot to call findMacs2() - pathToMacs2 is undefined!
-# pathToMacs2 <- findMacs2()
-
+pathToMacs2 <- findMacs2()
 
 proj <- addReproduciblePeakSet(
   ArchRProj = proj,
@@ -561,3 +558,422 @@ umap_withMagic <- plotEmbedding(
   imputeWeights = getImputeWeights(proj)  # Apply MAGIC
 )
 
+combined_plots <- wrap_plots(
+  umap_withMagic, ncol = 1
+) | wrap_plots(
+  umap_noMagic, ncol = 1
+)
+
+# Save the combined layout to a PDF
+pdf("umap_magic_vs_no_magic.pdf", width = 10, height = 20)  # Adjust dimensions
+combined_plots + plot_layout(ncol = 2, widths = c(1, 1)) 
+dev.off()
+
+# 6 Transcription Factor motif activity
+
+# 6.1 Compute TF motif activity
+proj <- addMotifAnnotations(
+  ArchRProj = proj, 
+  motifSet = "cisbp",   # Use the CIS-BP motif database
+  name = "Motif",
+  force=T# Name for the motif annotations
+)
+
+
+
+proj <- addBgdPeaks(proj)
+
+
+proj <- addDeviationsMatrix(
+  ArchRProj = proj, 
+  peakAnnotation = "Motif",  # Use the motif annotations added earlier
+)
+
+
+# 6.2 Plot UMAP embeddings for marker TFs
+# Get variability scores for motifs
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  name = "MotifMatrix", 
+  plot = F  # Plot variability of all motifs
+)
+
+# which are most variable 
+Top_var_motifs <- head(var_motifs,2)
+top_names <-Top_var_motifs$name
+markerMotifs <- getFeatures(proj, select = paste(top_names, collapse="|"), useMatrix = "MotifMatrix")
+markerMotifs_filtered <- grep("^z:", markerMotifs, value = TRUE)
+
+for (motif in markerMotifs_filtered) {
+  # Plot the motif activity on the UMAP
+  plot <- plotEmbedding(
+    ArchRProj = proj,
+    colorBy = "MotifMatrix",  # Use motif activity scores
+    name = motif,            # Correct motif name
+    embedding = "UMAP_Harmony"       # Use UMAP embedding
+  )
+  
+  # Display the plot
+  print(plot)
+  
+  # Save the plot as a PDF
+  plotPDF(
+    plot,
+    name = paste0("UMAP_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  name = "MotifMatrix", 
+  plot = T  # Plot variability of all motifs
+)
+
+# 6.3 Motif activity
+for (motif in markerMotifs_filtered) {
+  plot <- plotGroups(
+    ArchRProj = proj,
+    groupBy = "Clusters",       # Group by clusters
+    colorBy = "MotifMatrix",    # Use motif activity scores
+    name = motif,               # Correct motif name
+    plotAs = "violin"           # Plot as violin plot
+  )
+  
+  print(plot)
+  
+  plotPDF(
+    plot,
+    name = paste0("Violin_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+
+# 7 Integration with gene expression
+
+# 7.1 Data integration
+# Load the scRNA-seq data
+rna_data <- readRDS(rna_pbmc_path)
+
+
+proj <- addGeneIntegrationMatrix(
+  ArchRProj = proj, 
+  seRNA = rna_data,
+  addToArrow = T,
+  groupRNA = "Cluster.Name",
+  force = T,
+  reducedDims = "Harmony"
+)
+
+gene_plots <- list()
+marker_genes <- c("ID4", "EGR1", "OLIG2","SOX21","NEUROD1","NFIA","FOS","MEIS2","SOX10","NEUROG2","ASCL1","HES5","NHLH1","PBX1","EOMES")
+
+for (gene in marker_genes) {
+  plot <- plotEmbedding(
+    ArchRProj = proj,
+    colorBy = "GeneIntegrationMatrix",  # Use the integrated matrix
+    name = gene,                       # Gene name
+    embedding = "UMAP_Harmony"                 # UMAP embedding
+  )
+  
+  # Display the plot
+  print(plot)
+  gene_plots[[gene]] <- plot
+  # Save the plot as a PDF
+  plotPDF(
+    plot,
+    name = paste0("UMAP_GeneExpression_", gene, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+
+combined_gene_plots <- wrap_plots(gene_plots, ncol = 4, nrow = 4)
+
+# Save the combined grid to a single PDF
+pdf("UMAP_GeneExpression_Grid_Spaced.pdf", width = 20, height = 20)
+combined_plots <- wrap_plots(gene_plots, ncol = 4, nrow = 4) +
+  plot_layout(widths = c(1, 1, 1,1), heights = c(1, 1, 1, 1))
+print(combined_plots)
+dev.off()
+
+# 7.2 Correlation Coefficients
+cor_results <- correlateMatrices(
+  ArchRProj = proj,
+  useMatrix1 = "GeneIntegrationMatrix",  # Gene expression from scRNA-seq
+  useMatrix2 = "GeneScoreMatrix",        # Gene activity from scATAC-seq
+  reducedDims = "Harmony"
+)
+
+# Identify genes with highest/lowest agreement
+highest_agreement <- cor_results[which.max(cor_results$cor), ]
+lowest_agreement <- cor_results[which.min(cor_results$cor), ]
+
+print("Gene with highest agreement:")
+print(highest_agreement)
+
+print("Gene with lowest agreement:")
+print(lowest_agreement)
+
+# 7.3 Cluster labels from gene expression
+plotEmbedding(
+  ArchRProj = proj,
+  colorBy = "cellColData",
+  name = "predictedGroup",
+  embedding = "UMAP_Harmony"
+)
+
+proj$Clusters <- proj$predictedGroup
+
+confusion_matrix <- table(
+  ATAC_Clusters = proj$Clusters,
+  RNA_Labels = proj$predictedGroup
+)
+
+print(confusion_matrix)
+
+# 8 Peak-gene linkage
+proj <- addPeak2GeneLinks(
+  ArchRProj = proj,
+  reducedDims = "Harmony"  # Use reduced dimensions from scATAC-seq
+)
+
+peak2gene_links <- getPeak2GeneLinks(
+  ArchRProj = proj,
+  corCutOff = 0.5,
+  resolution = 100000
+)
+
+peak2gene_links[[1]]
+
+peak_heatmap <- plotPeak2GeneHeatmap(ArchRProj = proj)
+
+pdf("peak2gene_heatmap.pdf", width = 10, height = 8)  # Adjust dimensions as needed
+ComplexHeatmap::draw(peak_heatmap)  # Render the heatmap
+dev.off()  # Close the PDF device
+
+# Phase 4: Differential Analysis
+# 9 Differential accessibility
+proj <- addMotifAnnotations(ArchRProj = proj, motifSet = "cisbp", name = "Motif",force = T)
+# 9.1 Differential peak accessibility
+differential_peaks <- getMarkerFeatures(
+  ArchRProj = proj,
+  useMatrix = "PeakMatrix",
+  groupBy = "Clusters",
+  testMethod = "binomial",
+  useGroups = "GluN5",
+  bgdGroups = "Cyc. Prog.",
+  binarize = T
+)
+
+differential_peaks
+
+differential_peaks_df <- as.data.frame(rowData(differential_peaks))
+differential_peaks_df$Log2FC <- assay(differential_peaks, "Log2FC")[, 1]
+differential_peaks_df$FDR <- assay(differential_peaks, "FDR")[, 1]
+
+top_differential_peaks <- differential_peaks_df %>%
+  arrange(FDR, desc(abs(Log2FC)))
+
+
+top_differential_peaks
+
+table(proj$Clusters)
+
+pma <- plotMarkers(seMarker = differential_peaks, name = "GluN5",plotAs = "MA",cutOff ="FDR <= 0.6 & abs(Log2FC) >= 2")
+pma
+
+pv <- plotMarkers(seMarker = differential_peaks, name = "GluN5", plotAs = "Volcano",cutOff ="FDR <= 0.6 & abs(Log2FC) >= 2")
+pv
+
+ggsave("glun5_vs_cyc_MA.png", plot = pma, width = 6, height = 4)
+
+ggsave("glun5_vs_cyc_volcan.png", plot = pv, width = 6, height = 4)
+
+
+# 9.2 TF motif enrichment
+motifsUp <- peakAnnoEnrichment(
+  seMarker = differential_peaks,
+  ArchRProj = proj,
+  peakAnnotation = "Motif",
+  cutOff = "Log2FC >= 2"
+)
+
+df_up <- data.frame(
+  TF = rownames(motifsUp),
+  mlog10Padj = assay(motifsUp)[, 1]
+)
+df_up <- df_up[order(df_up$mlog10Padj, decreasing = TRUE), ]
+df_up$rank <- seq_len(nrow(df_up))
+
+# Plot for upregulated motifs
+ggUp <- ggplot(df_up, aes(rank, mlog10Padj, color = mlog10Padj)) +
+  geom_point(size = 1) +
+  ggrepel::geom_label_repel(
+    data = head(df_up, 30),  # Top 30 motifs
+    aes(x = rank, y = mlog10Padj, label = TF),
+    size = 1.5,
+    nudge_x = 2,
+    color = "black"
+  ) +
+  theme_ArchR() +
+  ylab("-log10(P-adj) Motif Enrichment") +
+  xlab("Rank Sorted TFs Enriched") +
+  scale_color_gradientn(colors = paletteContinuous(set = "comet"))
+
+print(ggUp)
+
+
+
+motifsDo <- peakAnnoEnrichment(
+  seMarker = differential_peaks,
+  ArchRProj = proj,
+  peakAnnotation = "Motif",
+  cutOff = "Log2FC <= -2"
+)
+
+df_do <- data.frame(
+  TF = rownames(motifsDo),
+  mlog10Padj = assay(motifsDo)[, 1]
+)
+df_do <- df_do[order(df_do$mlog10Padj, decreasing = TRUE), ]
+df_do$rank <- seq_len(nrow(df_do))
+
+# Plot for downregulated motifs
+ggDo <- ggplot(df_do, aes(rank, mlog10Padj, color = mlog10Padj)) +
+  geom_point(size = 1) +
+  ggrepel::geom_label_repel(
+    data = head(df_do, 30),  # Top 30 motifs
+    aes(x = rank, y = mlog10Padj, label = TF),
+    size = 1.5,
+    nudge_x = 2,
+    color = "black"
+  ) +
+  theme_ArchR() +
+  ylab("-log10(FDR) Motif Enrichment") +
+  xlab("Rank Sorted TFs Enriched") +
+  scale_color_gradientn(colors = paletteContinuous(set = "comet"))
+
+print(ggDo)
+
+
+
+ggsave("tf_motif_enriched_GluN5.png", plot = ggUp, width = 6, height = 4)
+
+ggsave("tf_motif_enriched_Cyc.png", plot = ggDo, width = 6, height = 4)
+
+differential_peaks <- getMarkerFeatures(
+  ArchRProj = proj,
+  useMatrix = "PeakMatrix",
+  groupBy = "Clusters",
+  testMethod = "wilcoxon",
+  useGroups = "GluN5",
+  bgdGroups = "Cyc. Prog.",
+  binarize = T
+)
+
+motifsAL <- peakAnnoEnrichment(
+  seMarker = differential_peaks,
+  ArchRProj = proj,
+  peakAnnotation = "Motif",
+  cutOff = "abs(FDR) != 0"
+)
+
+
+heatmapEncode <- plotEnrichHeatmap(motifsAL, n = 150, transpose = TRUE,cutOff = 1)
+
+ComplexHeatmap::draw(heatmapEncode, heatmap_legend_side = "bot", annotation_legend_side = "bot")
+plotPDF(heatmapEncode, name = "EncodeTFBS-Enriched-Marker-Heatmap", width = 8, height = 6, ArchRProj = proj, addDOC = FALSE)
+# 10 TF footprinting 
+
+# 10.1 Obtaining footprints on feature set
+motifPositions <- getPositions(proj)
+
+top_three_cyc = subset(df_up, rank < 4)
+top_three_GluN5=subset(df_do, rank <4 )
+df_tot = rbind(top_three_GluN5,top_three_cyc)
+
+
+seFoot <- getFootprints(
+  ArchRProj = proj, 
+  positions = motifPositions[df_tot$TF], 
+  groupBy = "Clusters",
+)
+
+
+
+
+# 10.2 Normalization for Tn5 Bias
+
+
+plotFootprints(
+  seFoot = seFoot,
+  ArchRProj = proj, 
+  normMethod = "Divide",
+  plotName = "Footprints-Divide-Bias",
+  addDOC = FALSE,
+  smoothWindow = 5
+)
+# 11 (Bonus) Co-accessibility
+
+
+# 11.1 Co-accessibility of peaks
+
+proj <- addCoAccessibility(
+  ArchRProj = proj,
+  reducedDims = "Harmony"
+)
+
+cA <- getCoAccessibility(
+  ArchRProj = proj,
+  corCutOff = 0.5,
+  resolution = 10000,
+  returnLoops = TRUE
+)
+
+topGenes <- c("TOP2A", "MKI67")  # Example gene list
+
+
+
+
+p <- plotBrowserTrack(
+  ArchRProj = proj, 
+  groupBy = "Clusters", 
+  geneSymbol = topGenes, 
+  upstream = 50000,
+  downstream = 50000,
+  loops = cA
+)
+
+plotPDF(plotList = p, 
+        name = "Plot-Tracks-Marker-Genes-with-CoAccessibility.pdf", 
+        ArchRProj = proj, 
+        addDOC = FALSE, width = 5, height = 5)
+# 11.2 Identify potential enhancers for marker genes
+
+
+markerGenes <- c("ID4", "EGR1", "OLIG2","SOX21","NEUROD1","NFIA","FOS","MEIS2","SOX10","NEUROG2","ASCL1","HES5","NHLH1","PBX1","EOMES")
+
+
+p2gLinks <- getPeak2GeneLinks(
+  ArchRProj = proj,
+  corCutOff = 0.4,    # Correlation cutoff for significant links
+  resolution = 10000,  # Resolution for peak-to-gene analysis
+  returnLoops = TRUE  # Return co-accessibility loops
+)
+
+p <- plotBrowserTrack(
+  ArchRProj = proj, 
+  groupBy = "Clusters", 
+  geneSymbol = markerGenes, 
+  upstream = 50000,
+  downstream = 50000,
+  loops = p2gLinks
+)
+
+plotPDF(plotList = p, 
+        name = "Plot-Tracks-Marker-Genes-with-Peak2GeneLinks.pdf", 
+        ArchRProj = proj, 
+        addDOC = FALSE, width = 5, height = 5)
