@@ -1,0 +1,45 @@
+# R project files
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# Data directories (generated during analysis)
+data/
+results/
+ArchRProject/
+QualityControl/
+
+# ArchR-specific files
+*.arrow
+Plots/
+
+# Output files
+*.pdf
+*.png
+*.jpeg
+*.jpg
+
+# renv library (dependencies managed via renv.lock)
+renv/library/
+renv/local/
+renv/cellar/
+renv/lock/
+renv/python/
+renv/sandbox/
+renv/staging/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# System files
+*~
+.*.swp

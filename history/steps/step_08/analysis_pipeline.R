@@ -433,3 +433,221 @@ cluster_sample_percentages <- prop.table(cluster_sample_proportions, margin = 1)
 # Print the result
 print(cluster_sample_percentages)
 
+# 4 Peaks
+
+# 4.1 Peak calling
+proj <- addGroupCoverages(
+  ArchRProj = proj,
+  groupBy = "Clusters"  # Use the clusters as groups for peak calling
+)
+
+pathToMacs2 <- findMacs2()
+
+proj <- addReproduciblePeakSet(
+  ArchRProj = proj,
+  groupBy = "Clusters",  # Use the clusters for peak calling
+  pathToMacs2 = pathToMacs2
+)
+
+proj <- addPeakMatrix(proj)
+
+# 4.2 Cluster marker peaks
+
+markersPeaks <- getMarkerFeatures(
+  ArchRProj = proj, 
+  useMatrix = "PeakMatrix", 
+  groupBy = "Clusters",
+  bias = c("TSSEnrichment", "log10(nFrags)"),  # Correcting for biases
+  testMethod = "wilcoxon"  # Wilcoxon rank-sum test for statistical testing
+)
+
+
+heatmapPeaks <- plotMarkerHeatmap(
+  seMarker = markersPeaks, 
+  # cutOff = "FDR <= 0.05 & Log2FC >= 1", 
+  transpose = TRUE
+)
+ComplexHeatmap::draw(heatmapPeaks, heatmap_legend_side = "bottom")
+heatmapPeaks
+
+pdf("heatmap_peaks.pdf", width = 8, height = 6)  # Specify file name and dimensions
+ComplexHeatmap::draw(heatmapPeaks, heatmap_legend_side = "bottom")
+dev.off()  # Close the PDF device
+
+genes <- c("TOP2A", "MKI67", "AURKA", "SATB2", "SLC12A7")
+plots <- lapply(genes, function(gene) {
+  plotBrowserTrack(
+    ArchRProj = proj,
+    groupBy = "Clusters",
+    geneSymbol = gene,
+    upstream = 50000,   # Adjust range as needed
+    downstream = 50000
+  )
+})
+
+# Save each plot
+
+
+for (i in seq_along(genes)) {
+  plot <- plots[[i]][[1]]  # Extract the first grob (main plot)
+  ggsave(
+    filename = paste0(project_dir,"/",genes[i], "_browser_track.pdf"),
+    plot = plot,
+    width = 8, height = 6
+  )
+}
+
+
+# Phase 3: Gene Activity Analysis
+# 5 Gene activity
+
+
+# 5.1 Compute gene activity scores using chromatin accessibility
+proj <- addGeneScoreMatrix(proj,force = T)
+
+
+# 5.2 Identify Marker genes
+
+markersGene <- getMarkerFeatures(
+  ArchRProj = proj, 
+  useMatrix = "GeneScoreMatrix", 
+  groupBy = "Clusters", 
+  bias = c("TSSEnrichment", "log10(nFrags)"),  # Correct for biases
+  testMethod = "wilcoxon"  # Statistical test
+) 
+
+markerList <- getMarkers(
+  seMarker = markersGene, 
+  # cutOff = "FDR <= 0.05 & Log2FC >= 1"
+)
+
+for (cluster in names(markerList)) {
+  # Extract the marker genes for the current cluster
+  cluster_markers <- markerList[[cluster]]
+  
+  # Get the first 5 marker genes (row names)
+  top_genes <- head(rownames(cluster_markers), 5)
+  
+  # Print the cluster name and the first 5 marker genes
+  cat("Cluster:", cluster, "\n")
+  print(top_genes)
+  cat("\n")
+}
+
+
+# 5.3 Using MAGIC
+
+topGenes <- c("TOP2A", "MKI67", "AURKA", "SATB2", "SLC12A7")  # Example gene list
+
+# 5.3.1 without magic
+umap_noMagic <- plotEmbedding(
+  ArchRProj = proj,
+  colorBy = "GeneScoreMatrix",
+  name = topGenes,
+  embedding = "UMAP_Harmony"
+)
+
+# 5.3.2 with magic
+proj <- addImputeWeights(proj)  # Add imputation weights for MAGIC
+
+umap_withMagic <- plotEmbedding(
+  ArchRProj = proj,
+  colorBy = "GeneScoreMatrix",
+  name = topGenes,
+  embedding = "UMAP_Harmony",
+  imputeWeights = getImputeWeights(proj)  # Apply MAGIC
+)
+
+combined_plots <- wrap_plots(
+  umap_withMagic, ncol = 1
+) | wrap_plots(
+  umap_noMagic, ncol = 1
+)
+
+# Save the combined layout to a PDF
+pdf("umap_magic_vs_no_magic.pdf", width = 10, height = 20)  # Adjust dimensions
+combined_plots + plot_layout(ncol = 2, widths = c(1, 1)) 
+dev.off()
+
+# 6 Transcription Factor motif activity
+
+# 6.1 Compute TF motif activity
+proj <- addMotifAnnotations(
+  ArchRProj = proj, 
+  motifSet = "cisbp",   # Use the CIS-BP motif database
+  name = "Motif",
+  force=T# Name for the motif annotations
+)
+
+
+
+proj <- addBgdPeaks(proj)
+
+
+proj <- addDeviationsMatrix(
+  ArchRProj = proj, 
+  peakAnnotation = "Motif",  # Use the motif annotations added earlier
+)
+
+
+# 6.2 Plot UMAP embeddings for marker TFs
+# Get variability scores for motifs
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  name = "MotifMatrix", 
+  plot = F  # Plot variability of all motifs
+)
+
+# which are most variable 
+Top_var_motifs <- head(var_motifs,2)
+top_names <-Top_var_motifs$name
+markerMotifs <- getFeatures(proj, select = paste(top_names, collapse="|"), useMatrix = "MotifMatrix")
+markerMotifs_filtered <- grep("^z:", markerMotifs, value = TRUE)
+
+for (motif in markerMotifs_filtered) {
+  # Plot the motif activity on the UMAP
+  plot <- plotEmbedding(
+    ArchRProj = proj,
+    colorBy = "MotifMatrix",  # Use motif activity scores
+    name = motif,            # Correct motif name
+    embedding = "UMAP_Harmony"       # Use UMAP embedding
+  )
+  
+  # Display the plot
+  print(plot)
+  
+  # Save the plot as a PDF
+  plotPDF(
+    plot,
+    name = paste0("UMAP_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+
+var_motifs <- getVarDeviations(
+  ArchRProj = proj, 
+  name = "MotifMatrix", 
+  plot = T  # Plot variability of all motifs
+)
+
+# 6.3 Motif activity
+for (motif in markerMotifs_filtered) {
+  plot <- plotGroups(
+    ArchRProj = proj,
+    groupBy = "Clusters",       # Group by clusters
+    colorBy = "MotifMatrix",    # Use motif activity scores
+    name = motif,               # Correct motif name
+    plotAs = "violin"           # Plot as violin plot
+  )
+  
+  print(plot)
+  
+  plotPDF(
+    plot,
+    name = paste0("Violin_", motif, ".pdf"),
+    ArchRProj = proj,
+    addDOC = FALSE
+  )
+}
+

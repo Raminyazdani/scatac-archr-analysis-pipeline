@@ -1,0 +1,16 @@
+TYPE	FILE	LOCATOR	BEFORE_SNIPPET	PROPOSED_CHANGE	RATIONALE	STATUS
+TRACE	README.md	line 3	**Project Type:** University Project	Remove this line entirely	Academic framing - not appropriate for portfolio	APPLIED
+TRACE	README.md	line 8	This is a Single Cell Bioinformatics project (Project 2)	Replace with professional description	References "Project 2" which is clearly academic	APPLIED
+TRACE	README.md	lines 22-28	Folder structure showing SCB2/	Update to reflect actual structure	Old folder name from academic context	APPLIED
+TRACE	prJ.R	line 38	# week 0	Change to # Configuration & Initialization	Academic weekly structure	APPLIED
+TRACE	prJ.R	line 110	# Week1	Change to # Phase 1: Preprocessing and Quality Control	Academic weekly structure	APPLIED
+TRACE	prJ.R	line 279	# Week 2	Change to # Phase 2: Dimensionality Reduction	Academic weekly structure	APPLIED
+TRACE	prJ.R	line 501	# Week 3	Change to # Phase 3: Gene Activity Analysis	Academic weekly structure	APPLIED
+TRACE	prJ.R	line 757	# Week4	Change to # Phase 4: Differential Analysis	Academic weekly structure	APPLIED
+STRUCTURE	README.md	lines 36-42	setwd("SCB2")	Remove SCB2 references	Old folder name - not aligned with current structure	APPLIED
+DOC	README.md	entire file	Current README structure	Restructure to portfolio-grade format	Add proper sections: Features, Prerequisites, Installation, Usage, Data Requirements, Output Structure, Configuration, Troubleshooting, Citation	APPLIED
+PATH	README.md	line 69	cd SCB2	Remove folder reference	Assumes specific folder structure	APPLIED
+PATH	README.md	line 86	cd SCB2	Remove folder reference	Assumes specific folder structure	APPLIED
+RENAME	prJ.R	filename	prJ.R	Rename to analysis_pipeline.R or main.R	More descriptive professional name	APPLIED
+DOC	.	root	Missing .gitignore	Create .gitignore for R project	Prevent committing generated files (data/, results/, .arrow files, .Rproj, etc.)	APPLIED
+DOC	.	root	Missing LICENSE	Consider adding LICENSE	Professional projects should have clear licensing	NOT_APPLIED - Can be added by user based on their licensing preference
